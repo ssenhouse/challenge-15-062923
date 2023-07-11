@@ -25,34 +25,7 @@ def build_validation_result(is_valid, violated_slot, message_content):
         "violatedSlot": violated_slot,
         "message": {"contentType": "PlainText", "content": message_content},
     }
-def validate_data(age, investment_amount,risk_level,intent_request):
-    if age is not None:
-        age = parse_int(age) # Ensure that age is not a string
-        if age < 0 or age > 65:
-            return build_validation_result(False, 
-                                        'age',
-                                        'The age should be greater than zero and less than 65')
-        
-    if investment_amount is not None:
-        investment_amount = parse_int(investment_amount)
-        if investment_amount < 5000:
-            return build_validation_result(False,
-                                            'investment_amount',
-                                            'The investment_amount should be equal to or greater than 5000')
-    if risk_level is not None:
-        if risk_level == "None":
-            return build_validation_result(True,
-                                        '100% bonds (AGG), 0% equities (SPY)')
-        if risk_level == 'low':
-            return build_validation_result(True,
-                                       "60% bonds (AGG), 40% equities (SPY)")
-        if risk_level == 'medium':
-            return build_validation_result(True,
-                                       "40% bonds (AGG), 60% equities (SPY)")
-        if risk_level == 'high':
-            return build_validation_result(True,
-                                        '20% bonds (AGG), 80% equities (SPY)')
-    return build_validation_result(True, None,True, None)
+
 
 ### Dialog Actions Helper Functions ###
 def get_slots(intent_request):
@@ -144,7 +117,7 @@ def recommend_portfolio(intent_request):
     """
     Performs dialog management and fulfillment for recommending a portfolio.
     """
-#Get slots' values
+
     first_name = get_slots(intent_request)["firstName"]
     age = get_slots(intent_request)["age"]
     investment_amount = get_slots(intent_request)["investmentAmount"]
@@ -152,38 +125,8 @@ def recommend_portfolio(intent_request):
     source = intent_request["invocationSource"]
 
     # YOUR CODE GOES HERE!
-# Gets the invocation source, for Lex dialogs "DialogCodeHook" is expected.
-    source = intent_request["invocationSource"]  #
 
-    if source == "DialogCodeHook":
-        # This code performs basic validation on the supplied input slots.
 
-        # Gets all the slots
-        slots = get_slots(intent_request)
-
-        # Validates user's input using the validate_data function
-        validation_result = validate_data(age,investment_amount,intent_request)
-
-        # If the data provided by the user is not valid,
-        # the elicitSlot dialog action is used to re-prompt for the first violation detected.
-        if not validation_result["isValid"]:
-            slots[validation_result["violatedSlot"]] = None  # Cleans invalid slot
-
-            # Returns an elicitSlot dialog to request new data for the invalid slot
-            return elicit_slot(
-                intent_request["sessionAttributes"],
-                intent_request["currentIntent"]["name"],
-                slots,
-                validation_result["violatedSlot"],
-                validation_result["message"],
-            )
-    
-        # Fetch current session attributes
-        output_session_attributes = intent_request["sessionAttributes"]
-
-        # Once all slots are valid, a delegate dialog is returned to Lex to choose the next course of action.
-        return delegate(output_session_attributes, get_slots(intent_request))           
-            
 ### Intents Dispatcher ###
 def dispatch(intent_request):
     """
