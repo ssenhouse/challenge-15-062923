@@ -14,4 +14,4 @@ The Bot then provided canned responses based on the risk tolerance. The bot also
 ## Results
 The link to the video here shows the bot functioning using Amazon Lex.
 
-![AmazonLexBot](/Amazon_Lex_v1_RoboAdvisor_lamda.mp4)
+![Amazon_Lex_v1_RoboAdvisor_lamda](https://github.com/ssenhouse/challenge-15-062923/assets/126835209/73d001c0-5b67-4575-88c4-ff3c2fc5ec96)
