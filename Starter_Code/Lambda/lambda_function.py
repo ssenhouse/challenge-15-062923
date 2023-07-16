@@ -25,34 +25,38 @@ def build_validation_result(is_valid, violated_slot, message_content):
         "violatedSlot": violated_slot,
         "message": {"contentType": "PlainText", "content": message_content},
     }
-def validate_data(age, investment_amount,risk_level,intent_request):
+
+def get_investment_recommendation(risk_level):
+    """
+    Returns an initial investment recommendation based on the risk profile.
+    """
+    risk_levels = {
+        "none": "100% bonds (AGG), 0% equities (SPY)",
+        "low": "60% bonds (AGG), 40% equities (SPY)",
+        "medium": "40% bonds (AGG), 60% equities (SPY)",
+        "high": "20% bonds (AGG), 80% equities (SPY)",
+    }
+    return risk_levels[risk_level.lower()]
+
+# Validate that the age is greater than 0 and less than 65
+def validate_data(age, investment_amount,intent_request):
     if age is not None:
         age = parse_int(age) # Ensure that age is not a string
         if age < 0 or age > 65:
             return build_validation_result(False, 
                                         'age',
                                         'The age should be greater than zero and less than 65')
-        
+
+# validate that the investment amount is greater than 5000       
     if investment_amount is not None:
         investment_amount = parse_int(investment_amount)
         if investment_amount < 5000:
             return build_validation_result(False,
                                             'investment_amount',
-                                            'The investment_amount should be equal to or greater than 5000')
-    if risk_level is not None:
-        if risk_level == "None":
-            return build_validation_result(True,
-                                        '100% bonds (AGG), 0% equities (SPY)')
-        if risk_level == 'low':
-            return build_validation_result(True,
-                                       "60% bonds (AGG), 40% equities (SPY)")
-        if risk_level == 'medium':
-            return build_validation_result(True,
-                                       "40% bonds (AGG), 60% equities (SPY)")
-        if risk_level == 'high':
-            return build_validation_result(True,
-                                        '20% bonds (AGG), 80% equities (SPY)')
-    return build_validation_result(True, None,True, None)
+                                            'The investment_amount should be equal to or greater than $5,000')
+                                            
+# Return the value as true if the age and the investment amount meet the criteria
+    return build_validation_result(True, None, None)
 
 ### Dialog Actions Helper Functions ###
 def get_slots(intent_request):
@@ -147,13 +151,11 @@ def recommend_portfolio(intent_request):
 #Get slots' values
     first_name = get_slots(intent_request)["firstName"]
     age = get_slots(intent_request)["age"]
-    investment_amount = get_slots(intent_request)["investmentAmount"]
+    investment_amount = get_slots(intent_request)["investment_amount"]
     risk_level = get_slots(intent_request)["riskLevel"]
     source = intent_request["invocationSource"]
 
     # YOUR CODE GOES HERE!
-# Gets the invocation source, for Lex dialogs "DialogCodeHook" is expected.
-    source = intent_request["invocationSource"]  #
 
     if source == "DialogCodeHook":
         # This code performs basic validation on the supplied input slots.
@@ -177,13 +179,27 @@ def recommend_portfolio(intent_request):
                 validation_result["violatedSlot"],
                 validation_result["message"],
             )
-    
+      
         # Fetch current session attributes
         output_session_attributes = intent_request["sessionAttributes"]
-
+    
         # Once all slots are valid, a delegate dialog is returned to Lex to choose the next course of action.
-        return delegate(output_session_attributes, get_slots(intent_request))           
-            
+        return delegate(output_session_attributes, get_slots(intent_request))
+    
+    initial_recommendation = get_investment_recommendation(risk_level) 
+    return close(
+         intent_request["sessionAttributes"],
+         "Fulfilled",
+        {
+            "contentType": "PlainText",
+            "content": """{} thank you for your information;
+            based on the risk level you defined, my recommendation is to choose an investment portfolio with {}
+            """.format(
+                first_name, initial_recommendation
+            ),
+        },
+    )           
+   
 ### Intents Dispatcher ###
 def dispatch(intent_request):
     """
